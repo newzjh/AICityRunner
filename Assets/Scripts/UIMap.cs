@@ -4,12 +4,12 @@ using UnityEngine.SceneManagement;
 
 public class UIMap : MonoBehaviour
 {
-    public GameObject progressUI;
+
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
@@ -18,20 +18,11 @@ public class UIMap : MonoBehaviour
         
     }
 
-    public async void StartPlay(string street)
+    public void StartPlay(string street)
     {
         gameObject.SetActive(false);
 
-        if (progressUI)
-            progressUI.SetActive(true);
-
-        await Global.BuildAISceneContent(street);
-
-        if (progressUI)
-            progressUI.SetActive(false);
-
-        await SceneManager.LoadSceneAsync("[PlayScene]");
-
+        GetComponentInParent<Intro_UI>().StartPlay(street);
     }
 
     public void OnClose()

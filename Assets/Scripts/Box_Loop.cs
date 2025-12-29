@@ -43,7 +43,7 @@ public class Box_Loop : MonoBehaviour {
         if (global == null || global.Coins == null || global.Coins.Length < 1)
             return;
 
-        var rbs = zonego.GetComponentsInChildren<Collider>();
+        var rbs = zonego.GetComponentsInChildren<Rigidbody>();
         foreach (var rb in rbs)
         {
             if (rb == null)
@@ -59,31 +59,21 @@ public class Box_Loop : MonoBehaviour {
 
 				GameObject.DestroyImmediate(mr.gameObject);
 
-				rb.transform.localPosition += Vector3.down;
+				int way = UnityEngine.Random.Range(0, 3);
 
-				GameObject spritego = new GameObject("Sprite");
+                //rb.transform.localPosition += Vector3.up * UnityEngine.Random.Range(0,5);
+                rb.transform.localPosition += Vector3.back * 5.0f * way;
+
+                GameObject spritego = new GameObject("Sprite");
 				spritego.transform.parent = rb.transform;
-				spritego.transform.localScale = Vector3.one * 0.3f;
-				spritego.transform.localEulerAngles = new Vector3(-15, 0, 0);
-				spritego.transform.localPosition = Vector3.zero;
+				spritego.transform.localScale = Vector3.one * (0.3f - way * 0.03f);
+				spritego.transform.localEulerAngles = new Vector3(-5, 0, 0);
+				spritego.transform.localPosition = Vector3.down * way * 0.2f + Vector3.forward * way * 1.0f;
 				var sr = spritego.AddComponent<SpriteRenderer>();
 				sr.material = global.CoinMat;
 				sr.sprite = global.Coins[UnityEngine.Random.Range(0, global.Coins.Length - 1)];
 
 			}
-
-            else if (rb.gameObject.tag == "Tile")
-            {
-
-                var mr = rb.GetComponentInChildren<MeshRenderer>();
-
-                if (mr == null)
-                    continue;
-
-				if (Global.bridge)
-					mr.material.mainTexture = Global.bridge;
-
-            }
 
         }
 
@@ -109,8 +99,11 @@ public class Box_Loop : MonoBehaviour {
             //mr.transform.localScale = new Vector3(1, 1, 0.45f);
 
             mr.transform.localEulerAngles = new Vector3(0, 0, 0);
-            mr.transform.localPosition = new Vector3(0, 0.3f, 3.3f);
+            mr.transform.localPosition = new Vector3(0, 0.3f, 3.08f);
             mr.transform.localScale = new Vector3(1, 1, 0.4f);
+
+            if (Global.bridge)
+                mr.material.mainTexture = Global.bridge;
         }
     }
 

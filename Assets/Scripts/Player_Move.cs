@@ -16,11 +16,12 @@ public class Player_Move : MonoBehaviour
 	public PlayerMoveStatus status;
 	public Sprite_Animation _SA;
 	public Sound_Player _SP;
+	public int Way_Index = 0;
 	
 	void Start ()
 	{
-	
-	}
+		Way_Index = 0;
+    }
 
 	void Update ()
 	{
@@ -87,7 +88,23 @@ public class Player_Move : MonoBehaviour
 				JUMP ();
 			}
 		}
-	}
+		else if (Input.GetKeyDown(KeyCode.DownArrow))
+		{
+			Way_Index++;
+			Way_Index = Mathf.Clamp(Way_Index, 0, 2);
+			var pos = transform.position;
+			pos.z = -Way_Index * 5;
+			transform.position = pos;
+        }
+        else if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            Way_Index--;
+            Way_Index = Mathf.Clamp(Way_Index, 0, 2);
+            var pos = transform.position;
+            pos.z = -Way_Index * 5;
+            transform.position = pos;
+        }
+    }
 	
 	void OnCollisionEnter (Collision Get)
 	{

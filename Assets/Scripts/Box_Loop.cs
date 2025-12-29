@@ -43,30 +43,48 @@ public class Box_Loop : MonoBehaviour {
         if (global == null || global.Coins == null || global.Coins.Length < 1)
             return;
 
-        var rbs = zonego.GetComponentsInChildren<Rigidbody>();
+        var rbs = zonego.GetComponentsInChildren<Collider>();
         foreach (var rb in rbs)
         {
             if (rb == null)
                 continue;
 
-            if (rb.gameObject.tag != "coin")
-                continue;
+			if (rb.gameObject.tag == "coin")
+			{
 
-            var mr = rb.GetComponentInChildren<MeshRenderer>();
+				var mr = rb.GetComponentInChildren<MeshRenderer>();
 
-            if (mr == null)
-                continue;
+				if (mr == null)
+					continue;
 
-            GameObject.DestroyImmediate(mr.gameObject);
+				GameObject.DestroyImmediate(mr.gameObject);
 
-            GameObject spritego = new GameObject("Sprite");
-            spritego.transform.parent = rb.transform;
-            spritego.transform.localScale = Vector3.one * 0.3f;
-            spritego.transform.localEulerAngles = new Vector3(-15,0,0);
-            spritego.transform.localPosition = Vector3.down * 2;
-            var sr = spritego.AddComponent<SpriteRenderer>();
-			sr.material = global.CoinMat;
-            sr.sprite = global.Coins[UnityEngine.Random.Range(0, global.Coins.Length - 1)];
+				rb.transform.localPosition += Vector3.down;
+
+				GameObject spritego = new GameObject("Sprite");
+				spritego.transform.parent = rb.transform;
+				spritego.transform.localScale = Vector3.one * 0.3f;
+				spritego.transform.localEulerAngles = new Vector3(-15, 0, 0);
+				spritego.transform.localPosition = Vector3.zero;
+				var sr = spritego.AddComponent<SpriteRenderer>();
+				sr.material = global.CoinMat;
+				sr.sprite = global.Coins[UnityEngine.Random.Range(0, global.Coins.Length - 1)];
+
+			}
+
+            else if (rb.gameObject.tag == "Tile")
+            {
+
+                var mr = rb.GetComponentInChildren<MeshRenderer>();
+
+                if (mr == null)
+                    continue;
+
+				if (Global.bridge)
+					mr.material.mainTexture = Global.bridge;
+
+            }
+
         }
 
 		var boxs = zonego.GetComponentsInChildren<BoxCollider>();

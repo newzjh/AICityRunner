@@ -40,7 +40,7 @@ public class Camera_Zoom : MonoBehaviour
 			
 		_camera.orthographicSize = Mathf.Lerp (_camera.orthographicSize, CameraSize, Time.deltaTime / speed);
 		
-		_camera.fieldOfView = MathF.Min(17.0f + (CameraSize - 5.0f) * 1.5f, 21.0f); //17.0f + (CameraSize - 5.0f) * 1.5f;
+		_camera.fieldOfView = MathF.Min(17.0f + (CameraSize - 5.0f) * 1.5f, 20.5f); //17.0f + (CameraSize - 5.0f) * 1.5f;
 
 
     }

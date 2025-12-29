@@ -18,8 +18,8 @@ public class Scroll_Mapping : MonoBehaviour
         r = GetComponent<Renderer>();
 
         var tex = r.material.mainTexture;
-        float s = 2.0f / ((float)tex.width / (float)tex.height) * 2.0f;
-        r.material.mainTextureScale = new Vector2(s, 1.0f);
+        float s = 2.0f / ((float)tex.width / (float)tex.height) * 2.5f;
+        r.material.mainTextureScale = new Vector2(s, 1.8f);
     }
 
     void Update ()
@@ -28,7 +28,7 @@ public class Scroll_Mapping : MonoBehaviour
 			return;
 	
 		Offset += Time.deltaTime * ScrollSpeed;
-        r.material.mainTextureOffset = new Vector2 (Offset, 0.01f);
+        r.material.mainTextureOffset = new Vector2 (Offset, -0.75f);
 		
 	}
 }

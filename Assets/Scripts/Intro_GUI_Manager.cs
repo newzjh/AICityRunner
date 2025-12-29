@@ -42,7 +42,7 @@ public class Intro_GUI_Manager : MonoBehaviour
         Debug.Log("gotoPlay");
 		_click = true;
 
-        await Global.BuildAISceneContent();
+        await Global.BuildAISceneContent("π„÷›");
 		_fade.FadeOut();
 		await UniTask.WaitForSeconds(_fade.Fade_Time);
 
@@ -63,14 +63,14 @@ public class Intro_GUI_Manager : MonoBehaviour
 	
 	void OnGUI ()
 	{
-        screenX = Screen.width;
-        screenY = Screen.height;
-        if (!_click)
-		{
-			if (GUI.Button(new Rect(screenX * 0.5f - Play_btn.width * 0.5f, screenY * 0.5f + Play_btn.height * 0.5f + 100f, Play_btn.width, Play_btn.height), Play_btn, guiRectStyle))
-			{
-				StartPlay();
-            }
-		}
+  //      screenX = Screen.width;
+  //      screenY = Screen.height;
+  //      if (!_click)
+		//{
+		//	if (GUI.Button(new Rect(screenX * 0.5f - Play_btn.width * 0.5f, screenY * 0.5f + Play_btn.height * 0.5f + 100f, Play_btn.width, Play_btn.height), Play_btn, guiRectStyle))
+		//	{
+		//		StartPlay();
+  //          }
+		//}
 	}
 }

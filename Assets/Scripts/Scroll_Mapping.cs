@@ -18,7 +18,7 @@ public class Scroll_Mapping : MonoBehaviour
         r = GetComponent<Renderer>();
 
         var tex = r.material.mainTexture;
-        float s = 2.0f / ((float)tex.width / (float)tex.height) * 2.5f;
+        float s = 6.25f / ((float)tex.width / (float)tex.height);
         r.material.mainTextureScale = new Vector2(s, 1.8f);
     }
 

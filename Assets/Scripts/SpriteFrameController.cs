@@ -8,11 +8,12 @@ public class SpriteFrameController : MonoBehaviour
     SpriteRenderer r;
     Sprite[] ss;
     public SpriteAtlas atlas;
-    public AtlaCollection atlas2;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public void Start()
     {
+        var global = GameObject.FindFirstObjectByType<Global>(FindObjectsInactive.Include);
+
         r = GetComponent<SpriteRenderer>();
         if (atlas != null && atlas.spriteCount>0)
         {
@@ -23,9 +24,10 @@ public class SpriteFrameController : MonoBehaviour
             ss2.OrderBy(n => n.name);
             ss = ss2.ToArray();
         }
-        if (atlas2 != null && atlas2.sprites!=null)
+        if (global!=null && global.CurrentUser != null)
         {
-            ss = atlas2.sprites;
+            ss = global.CurrentUser.sprites;
+            speed2 = global.CurrentSpeed;
         }
     }
 

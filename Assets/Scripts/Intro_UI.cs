@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class Intro_UI : MonoBehaviour
 {
-    public RawImage[] Maps;
+    public UIMap[] Maps;
     public GameObject progressUI;
     public GameObject mainMenu;
 

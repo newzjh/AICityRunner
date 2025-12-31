@@ -30,6 +30,10 @@ public class Global : MonoBehaviour
 
     public Texture2D[] bridges;
 
+    public AtlaCollection DefaultUser;
+    public AtlaCollection CurrentUser;
+    public float CurrentSpeed = 24;
+
     public static bool runtimegeneration = true;
     public static async UniTask BuildAISceneContent(string street)
     {

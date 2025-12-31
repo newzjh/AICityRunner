@@ -40,42 +40,42 @@ public class Box_Loop : MonoBehaviour {
 	public void ModifyZoneCoin(GameObject zonego)
 	{
         Global global = GameObject.FindFirstObjectByType<Global>();
-        if (global == null || global.Coins == null || global.Coins.Length < 1)
-            return;
 
-        var rbs = zonego.GetComponentsInChildren<Rigidbody>();
-        foreach (var rb in rbs)
-        {
-            if (rb == null)
-                continue;
-
-			if (rb.gameObject.tag == "coin")
+		if (global != null && global.Coins != null && global.Coins.Length > 0)
+		{
+			var rbs = zonego.GetComponentsInChildren<Rigidbody>();
+			foreach (var rb in rbs)
 			{
-
-				var mr = rb.GetComponentInChildren<MeshRenderer>();
-
-				if (mr == null)
+				if (rb == null)
 					continue;
 
-				GameObject.DestroyImmediate(mr.gameObject);
+				if (rb.gameObject.tag == "coin")
+				{
 
-				int way = UnityEngine.Random.Range(0, 3);
+					var mr = rb.GetComponentInChildren<MeshRenderer>();
 
-                //rb.transform.localPosition += Vector3.up * UnityEngine.Random.Range(0,5);
-                rb.transform.localPosition += Vector3.back * 5.0f * way;
+					if (mr == null)
+						continue;
 
-                GameObject spritego = new GameObject("Sprite");
-				spritego.transform.parent = rb.transform;
-				spritego.transform.localScale = Vector3.one * (0.3f - way * 0.03f);
-				spritego.transform.localEulerAngles = new Vector3(-5, 0, 0);
-				spritego.transform.localPosition = Vector3.down * way * 0.2f + Vector3.forward * way * 1.0f;
-				var sr = spritego.AddComponent<SpriteRenderer>();
-				sr.material = global.CoinMat;
-				sr.sprite = global.Coins[UnityEngine.Random.Range(0, global.Coins.Length - 1)];
+					GameObject.DestroyImmediate(mr.gameObject);
 
+					int way = UnityEngine.Random.Range(0, 3);
+
+					//rb.transform.localPosition += Vector3.up * UnityEngine.Random.Range(0,5);
+					rb.transform.localPosition += Vector3.back * 5.0f * way;
+
+					GameObject spritego = new GameObject("Sprite");
+					spritego.transform.parent = rb.transform;
+					spritego.transform.localScale = Vector3.one * (0.3f - way * 0.03f);
+					spritego.transform.localEulerAngles = new Vector3(-5, 0, 0);
+					spritego.transform.localPosition = Vector3.down * way * 0.2f + Vector3.forward * way * 1.0f;
+					var sr = spritego.AddComponent<SpriteRenderer>();
+					sr.material = global.CoinMat;
+					sr.sprite = global.Coins[UnityEngine.Random.Range(0, global.Coins.Length - 1)];
+
+				}
 			}
-
-        }
+		}
 
 		var boxs = zonego.GetComponentsInChildren<BoxCollider>();
 		foreach(var box in boxs)

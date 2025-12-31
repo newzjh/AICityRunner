@@ -1,0 +1,60 @@
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.U2D;
+
+public class SpriteFrameController : MonoBehaviour
+{
+    SpriteRenderer r;
+    Sprite[] ss;
+    public SpriteAtlas atlas;
+    public AtlaCollection atlas2;
+
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
+    {
+        r = GetComponent<SpriteRenderer>();
+        if (atlas != null && atlas.spriteCount>0)
+        {
+            ss = new Sprite[atlas.spriteCount];
+            atlas.GetSprites(ss);
+            List<Sprite> ss2 = new();
+            ss2.AddRange(ss);
+            ss2.OrderBy(n => n.name);
+            ss = ss2.ToArray();
+        }
+        if (atlas2 != null && atlas2.sprites!=null)
+        {
+            ss = atlas2.sprites;
+        }
+    }
+
+    private float time = 0;
+    public float speed = 0.02f;
+    public float speed2 = 24.0f;
+    public int index1 = 0;
+    public int index2 = 0;
+    // Update is called once per frame
+    void Update()
+    {
+        if (ss == null || ss.Length <= 0)
+            return;
+
+        time += Time.deltaTime;
+        int frameCount = Mathf.RoundToInt (time * speed2);
+        index1 = frameCount % ss.Length;
+
+        //if (speed > 0)
+        //{
+        //    while (time > speed)
+        //    {
+        //        time -= speed;
+        //        index1 = (index1 + 1) % ss.Length;
+        //    }
+        //}
+
+        //index2 = index1;
+        //index1 = (index2 - 1 + ss.Length) % ss.Length;
+        r.sprite = ss[index1];
+    }
+}

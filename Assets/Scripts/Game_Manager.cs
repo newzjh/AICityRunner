@@ -1,7 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
-using Unity.VisualScripting;
 
 //게임의 진행중인 상태를 정의
 public enum GameState
@@ -23,6 +21,15 @@ public class Game_Manager : MonoBehaviour
 
 	public float Meter;
 	public int GetMoney = 0;
+	public int Lives = 2;
+	public int MaxLives = 5;
+	public int CheckInCount = 0;
+	public float SpeedBoostAmount;
+	public float SpeedBoostTime;
+	public float HitInvulnerableTime = 1.0f;
+
+	float nextHitAvailableTime;
+	string currentCity;
 
 
 	//GUI 관련
@@ -68,14 +75,17 @@ public class Game_Manager : MonoBehaviour
 			_SM.Calc();
         }
 		
-		GameSpeed = _BL.Speed;		
+		currentCity = Global.CurrentCity;
+		GameSpeed = _BL != null ? _BL.Speed : GameSpeed;
 		SCREENSETTING ();
+		RefreshHUD();
 	}
 
 	void Update ()
 	{
 		if (GS == GameState.Play) {
 			METERUPDATE ();
+			UPDATESPEEDBOOST();
 		}
 
 	}
@@ -149,13 +159,61 @@ public class Game_Manager : MonoBehaviour
 	
 	public void GETCOIN ()
 	{
-		GetMoney += 1;
-		Gold_Label.text = string.Format ("{0:N0}", GetMoney);
+		ADDSCORE (1);
+	}
+
+	public void ADDSCORE (int amount)
+	{
+		GetMoney += amount;
+		RefreshHUD ();
+	}
+
+	public void GAINLIFE (int amount)
+	{
+		Lives = Mathf.Clamp (Lives + amount, 0, MaxLives);
+		RefreshHUD ();
+	}
+
+	public void REGISTERCHECKIN (string placeName)
+	{
+		CheckInCount += 1;
+		ADDSCORE (3);
+		Debug.Log ($"[CheckIn] {Global.CurrentCity} - {placeName}");
+	}
+
+	public void APPLYSPEEDBOOST (float bonusSpeed, float duration)
+	{
+		SpeedBoostAmount = Mathf.Max (SpeedBoostAmount, bonusSpeed);
+		SpeedBoostTime = Mathf.Max (SpeedBoostTime, duration);
+		REFRESHRUNNERSPEED ();
+	}
+
+	public bool TAKEHIT (int damage, string sourceName)
+	{
+		//if (GS == GameState.End) {
+		//	return true;
+		//}
+
+		if (Time.time < nextHitAvailableTime) {
+			return false;
+		}
+
+		nextHitAvailableTime = Time.time + HitInvulnerableTime;
+		Lives = Mathf.Clamp (Lives - damage, 0, MaxLives);
+		Debug.Log ($"[Hit] {sourceName}, hp={Lives}");
+		RefreshHUD ();
+
+		if (Lives <= 0) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public void METERUPDATE ()
 	{
-		Meter += Time.deltaTime * GameSpeed;
+		float currentSpeed = GameSpeed + SpeedBoostAmount;
+		Meter += Time.deltaTime * currentSpeed;
 		Meter_Label.text = string.Format ("{0:N0}<color=#ff3366> m</color>", Meter);
 
 		//시간이 지날수록 속도가 점점 빨라지게 한다.
@@ -190,6 +248,37 @@ public class Game_Manager : MonoBehaviour
 		GameLv += 1;
 		//GameSpeed += 3;
 		//_SM.ScrollSpeed += 0.1f;
-		_BL.Speed = GameSpeed;
+		REFRESHRUNNERSPEED ();
+	}
+
+	void UPDATESPEEDBOOST ()
+	{
+		if (SpeedBoostTime <= 0f) {
+			return;
+		}
+
+		SpeedBoostTime -= Time.deltaTime;
+		if (SpeedBoostTime <= 0f) {
+			SpeedBoostTime = 0f;
+			SpeedBoostAmount = 0f;
+			REFRESHRUNNERSPEED ();
+		}
+	}
+
+	void REFRESHRUNNERSPEED ()
+	{
+		if (_BL != null) {
+			_BL.Speed = GameSpeed + SpeedBoostAmount;
+		}
+	}
+
+	void RefreshHUD ()
+	{
+		if (Gold_Label != null) {
+			if (string.IsNullOrEmpty (currentCity))
+				Gold_Label.text = string.Format ("{0:N0}  HP:{1}  打卡:{2}", GetMoney, Lives, CheckInCount);
+			else
+				Gold_Label.text = string.Format ("{0:N0}  HP:{1}  打卡:{2}  {3}", GetMoney, Lives, CheckInCount, currentCity);
+		}
 	}
 }

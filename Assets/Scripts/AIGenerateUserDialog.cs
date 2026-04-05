@@ -43,7 +43,7 @@ public class AIGenerateUserDialog : MonoBehaviour
         if (progressUI)
             progressUI.gameObject.SetActive(true);
 
-        string prompt = $"C4D风格的16帧跑步动画序列网格图，宽度和高度分别是1024像素和2048像素，4x4的网格布局，每个格子占512*1024像素，每个格子内是一个跑步动作的关键帧，帧与帧之间动作要连贯斜街，角色是侧面视角的游戏角色，{inputfield.text}。第1-5帧：站立起步姿势，面向右，第6-10帧：抬起左腿，向右跑动，第11-15帧：跑步中，向右跑动。所有帧的角色比例保持一致，每个格子背景为纯黑色，格子与格子之间不留空间，格子之间如果有任何其他内容需要替换为纯黑色";
+        string prompt = $"C4D风格的16帧跑步动画序列网格图，9:16的比例，4x4的网格布局，每个格子内是一个跑步动作的关键帧，帧与帧之间动作要连贯斜街，角色是侧面视角的游戏角色，{inputfield.text}。第1-5帧：站立起步姿势，面向右，第6-10帧：抬起左腿，向右跑动，第11-15帧：跑步中，向右跑动。所有帧的角色比例保持一致，每个格子背景为纯黑色，格子与格子之间不留空间，格子之间如果有任何其他内容需要替换为纯黑色";
         tex = await TextToImage2.SendStreamRequestCommon(prompt);
 
         var bytes = tex.EncodeToJPG();

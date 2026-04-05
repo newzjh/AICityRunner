@@ -1,26 +1,12 @@
 using Cysharp.Threading.Tasks;
-using JetBrains.Annotations;
-using System.Collections.Generic;
-using UnityEditor.Rendering;
 using UnityEngine;
 
 public class Global : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     public static Texture2D bg;
     public static Texture2D bridge;
-    //public static string street = "¹ãÖİÔÄ½­¶«Â·";
+    public static string CurrentStreet = "å¹¿å·";
+    public static string CurrentCity = "å¹¿å·";
 
     public Sprite[] Coins;
 
@@ -35,48 +21,42 @@ public class Global : MonoBehaviour
     public float CurrentSpeed = 24;
 
     public static bool runtimegeneration = true;
+
     public static async UniTask BuildAISceneContent(string street)
     {
-        //List<string> streets = new();
-        //streets.Add("¹ãÖİÔÄ½­¶«Â·");
-        //streets.Add("¹ãÖİÑØ½­Â·");
-        //streets.Add("¹ãÖİÌåÓıÖĞĞÄ");
-        //streets.Add("¹ãÖİÖé½­ĞÂ³Ç");
-        //streets.Add("¹ãÖİ°×ÔÆÉ½");
-        //streets.Add("ÉîÛÚºóº£");
-        //streets.Add("ÉîÛÚÇ°º£");
-        //streets.Add("ÉîÛÚÊĞÃñÖĞĞÄ");
-        //streets.Add("Ïã¸ÛÖĞ»·");
-        //streets.Add("Ïã¸Û¿ÆÑ§Ô°");
-        //streets.Add("Ïã¸Ûºì´|");
+        if (string.IsNullOrWhiteSpace(street))
+        {
+            street = "å¹¿å·";
+        }
 
-        //if (streets.Count > 0)
-        //{
-        //    street = streets[UnityEngine.Random.Range(0, streets.Count - 1)];
-        //}
-
-        //{
-        //    var prompt = "Éú³É" + street + "½Ö¾°±³¾°Í¼Æ¬£¬Á¢ÌåÏñËØ£¬ÏñËØ·ç£¬16-bitpixel art£¬¸´¹Å£¬Æ½ÆÌÕ¹Ê¾£¬ÏñËØÓÎÏ··ç¸ñ£¬Ô¶¾°£¬Æ½ÊÓ½Ç¶È£¬µÀÂ·ÔÚ×îÇ°·½Æ½ĞĞÓÚÍ¼Æ¬·ÅÖÃÇÒÑÏ¸ñÕ¼±È²»³¬¹ıÍ¼Æ¬×Ü¸ß¶ÈµÄ1/4£¬×îÖÕÍ¼Æ¬ÎªºáÏòÑ­»·ÌùÍ¼£¬×îÓÒ²àÄÚÈİÄÜÎŞ·ìÆ´½Ó×î×ó²àÄÚÈİ";
-        //    var tex = await TextToImage2.SendStreamRequestCommon(prompt);
-
-        //    bg = tex;
-        //}
+        CurrentStreet = street;
+        CurrentCity = CityRuntimeContent.ResolveCityName(street);
+        CityRuntimeProfile cityProfile = CityRuntimeContent.ResolveProfile(street);
+        Global global = GameObject.FindFirstObjectByType<Global>();
 
         if (runtimegeneration)
         {
-            var prompt = "Éú³É" + street + "ºá°æÓÎÏ·½Ö¾°£¬Ë®Æ½ÑöÊÓÊÓ½Ç£¬C4D·ç¸ñ£¬³¬¸ßÇå£¬´óÊ¦¼¶½¨ÖşäÖÈ¾£¬ÕæÊµ»¹Ô­¸Ã³ÇÊĞ±ÈÀıÓëµÀÂ·½á¹¹£¬Ô¶¾°Îª¸Ã³ÇÊĞÉ½Âö£¬ÖĞ¾°°üº¬¼¸¸ö¸Ã³ÇÊĞÆ¬ÇøÌØÉ«µØ±ê½¨Öş£¬Ç°¾°Îª¸Ã³ÇÊĞÆ¬ÇøµÄÌØÉ«Ë®Óò£¨ÀıÈç½­»òÍå£©£¬µØ±ê½¨Öş¼°Ë®ÓòĞèºáÏòÆ½ĞĞÓÚµ×±ß£¬×îÖÕÍ¼Æ¬ÎªºáÏòÑ­»·ÌùÍ¼£¬×îÓÒ²àÄÚÈİÄÜÎŞ·ìÆ´½Ó×î×ó²àÄÚÈİ£¬¹¹Í¼Õû½à£¬½¨Öş±ÈÀı¾«×¼£¬É«²Ê¶à²ÊÏÊÃ÷£¬²ÄÖÊ·á¸»£¬È¥µôÆ´½ÓÏß£¬È¥µôÎÄ×Ö";
+            string prompt = "ç”Ÿæˆ" + street + "åŸå¸‚æ¨ªæ¿è·‘é…·è¡—æ™¯ï¼Œæ°´å¹³ä¾§è§†è§’ï¼ŒC4Dé£æ ¼ï¼Œä¿ç•™åŸå¸‚å¤©é™…çº¿å’Œé“è·¯ç»“æ„ï¼ŒåŒ…å«åœ°æ ‡ã€è¡—è¾¹ç»¿åŒ–ä¸æ°´å²¸å±‚æ¬¡ï¼Œé€‚åˆæ¨ªå‘æ— é™å·è½´æ‹¼æ¥ï¼Œæ— æ˜æ˜¾æ¥ç¼ï¼Œæ•´ä½“è‰²å½©ä½“ç°" + cityProfile.CityName + "æ°”è´¨ã€‚";
             var tex = await TextToImage2.SendStreamRequestCommon(prompt);
             tex.wrapMode = TextureWrapMode.Mirror;
             bg = tex;
 
-            var global = GameObject.FindFirstObjectByType<Global>();
-            bridge = global.bridges[UnityEngine.Random.Range(0, global.bridges.Length - 1)];
+            if (global != null && global.bridges != null && global.bridges.Length > 0)
+            {
+                bridge = global.bridges[UnityEngine.Random.Range(0, global.bridges.Length - 1)];
+            }
         }
-        else 
+        else if (global != null)
         {
-            var global = GameObject.FindFirstObjectByType<Global>();
-            bg = global.bgs[UnityEngine.Random.Range(0, global.bgs.Length - 1)];
-            bridge = global.bridges[UnityEngine.Random.Range(0, global.bridges.Length - 1)];
+            if (global.bgs != null && global.bgs.Length > 0)
+            {
+                bg = global.bgs[UnityEngine.Random.Range(0, global.bgs.Length - 1)];
+            }
+
+            if (global.bridges != null && global.bridges.Length > 0)
+            {
+                bridge = global.bridges[UnityEngine.Random.Range(0, global.bridges.Length - 1)];
+            }
         }
 
         {

@@ -20,7 +20,7 @@ public class Global : MonoBehaviour
     public AtlaCollection CurrentUser;
     public float CurrentSpeed = 24;
 
-    public static bool runtimegeneration = true;
+    public static bool runtimegeneration = false;
 
     public static async UniTask BuildAISceneContent(string street)
     {

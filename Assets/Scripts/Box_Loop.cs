@@ -116,7 +116,8 @@ public class Box_Loop : MonoBehaviour {
                 mr.material.mainTexture = Global.bridge;
         }
 
-		//BuildDynamicCityContent(zonego);
+		if (!zonego.name.Contains("box_Loop_Coin"))
+			BuildDynamicCityContent(zonego);
     }
 
 	[NonSerialized]

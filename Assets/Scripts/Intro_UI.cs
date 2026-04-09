@@ -27,10 +27,6 @@ public class Intro_UI : MonoBehaviour
         Maps[mapIndex].gameObject.SetActive(true);
     }
 
-    public void SwitchRuntimeGeneration(bool value)
-    {
-        Global.runtimegeneration = value;
-    }
 
     public async void StartPlay(string street)
     {

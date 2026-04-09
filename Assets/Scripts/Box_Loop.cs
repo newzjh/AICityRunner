@@ -213,11 +213,11 @@ public class Box_Loop : MonoBehaviour {
 
 	void SpawnInteractiveItem(Transform root, List<float>[] laneUsage, CityRuntimeProfile profile, DynamicStreetItemType itemType)
 	{
-		int lane = UnityEngine.Random.Range(0, 3);
+		int lane = UnityEngine.Random.Range(0, 2);
 		if (!TryReserveLanePosition(laneUsage, lane, out Vector3 localPosition, 10, MinLaneSpacing))
 			return;
 
-		localPosition.y = itemType == DynamicStreetItemType.Obstacle ? 0.8f : 1.4f;
+		//localPosition.y = itemType == DynamicStreetItemType.Obstacle ? 0.8f : 1.4f;
 
 		PrimitiveType primitiveType = PrimitiveType.Sphere;
 		Vector3 scale = Vector3.one * 0.9f;
@@ -240,8 +240,9 @@ public class Box_Loop : MonoBehaviour {
 				scale = new Vector3(0.95f, 0.95f, 0.95f);
 				break;
 		}
+        scale = Vector3.one * 0.5f;
 
-		string label = CityRuntimeContent.PickLabel(profile, itemType);
+        string label = CityRuntimeContent.PickLabel(profile, itemType);
 		Color bodyColor = GetBodyColor(profile, itemType);
 		Color accentColor = GetAccentColor(profile, itemType);
 
@@ -250,7 +251,7 @@ public class Box_Loop : MonoBehaviour {
 		prop.transform.SetParent(root, false);
 		prop.transform.localPosition = localPosition;
 		prop.transform.localScale = scale;
-		prop.tag = itemType == DynamicStreetItemType.Obstacle ? "DeathZone" : "coin";
+		prop.tag = "coin";// itemType == DynamicStreetItemType.Obstacle ? "Obstacle" : "coin";
 
 		Collider collider = prop.GetComponent<Collider>();
 		if (collider != null)
@@ -262,6 +263,7 @@ public class Box_Loop : MonoBehaviour {
 
 		Renderer renderer = prop.GetComponent<Renderer>();
 		ConfigureRenderer(renderer, bodyColor);
+		SetRendererVisible(renderer, false);
 
 		DynamicStreetRuntimeItem runtimeItem = prop.AddComponent<DynamicStreetRuntimeItem>();
 		runtimeItem.ItemType = itemType;
@@ -273,9 +275,7 @@ public class Box_Loop : MonoBehaviour {
 		runtimeItem.SpeedDuration = itemType == DynamicStreetItemType.SpeedPickup ? 4f : 0f;
 		runtimeItem.EnableSpin = itemType != DynamicStreetItemType.Obstacle;
 		runtimeItem.EnableBob = itemType != DynamicStreetItemType.Obstacle;
-
-		AddAccent(prop.transform, accentColor, itemType);
-		CreateLabel(prop.transform, label, Color.white);
+		CreateGeneratedSpriteVisual(prop.transform, itemType, label, bodyColor, accentColor, false);
 	}
 
 	void SpawnDecorationItem(Transform root, List<float>[] laneUsage, CityRuntimeProfile profile, DynamicStreetItemType itemType)
@@ -316,9 +316,10 @@ public class Box_Loop : MonoBehaviour {
 		if (collider != null)
 			collider.enabled = false;
 
-		ConfigureRenderer(prop.GetComponent<Renderer>(), GetBodyColor(profile, itemType));
-		AddAccent(prop.transform, GetAccentColor(profile, itemType), itemType);
-		CreateLabel(prop.transform, label, profile.AccentColor);
+		Renderer renderer = prop.GetComponent<Renderer>();
+		ConfigureRenderer(renderer, GetBodyColor(profile, itemType));
+		SetRendererVisible(renderer, false);
+		CreateGeneratedSpriteVisual(prop.transform, itemType, label, GetBodyColor(profile, itemType), GetAccentColor(profile, itemType), true);
 	}
 
 	bool TryReserveLanePosition(List<float>[] laneUsage, int lane, out Vector3 localPosition, int attempts, float minSpacing)
@@ -356,6 +357,62 @@ public class Box_Loop : MonoBehaviour {
 		Material material = new Material(renderer.sharedMaterial);
 		material.color = color;
 		renderer.material = material;
+	}
+
+	void SetRendererVisible(Renderer renderer, bool visible)
+	{
+		if (renderer == null)
+			return;
+
+		renderer.enabled = visible;
+	}
+
+	void CreateGeneratedSpriteVisual(Transform parent, DynamicStreetItemType itemType, string label, Color bodyColor, Color accentColor, bool decorative)
+	{
+		GameObject visualGo = new GameObject("GeneratedSprite");
+		visualGo.transform.SetParent(parent, false);
+		visualGo.transform.localPosition = Vector3.zero;// decorative ? new Vector3(0f, 0.85f, 0.4f) : new Vector3(0f, 0.1f, 0.45f);
+		visualGo.transform.localEulerAngles = new Vector3(-5f, 0f, 0f);
+		Vector3 desiredWorldScale = Vector3.one * 0.4f;// decorative ? new Vector3(2.2f, 1.8f, 1f) : new Vector3(1.6f, 1.6f, 1f);
+		Vector3 parentWorldScaleAbs = GetWorldScaleAbs(parent);
+		visualGo.transform.localScale = GetLocalScaleForDesiredWorldScale(desiredWorldScale, parentWorldScaleAbs);
+
+		SpriteRenderer spriteRenderer = visualGo.AddComponent<SpriteRenderer>();
+		spriteRenderer.sprite = DynamicStreetSpriteFactory.GetSprite(itemType, label, bodyColor, accentColor, decorative);
+		spriteRenderer.sortingOrder = decorative ? 10 : 20;
+		var resolver = visualGo.AddComponent<DynamicStreetVisualResolver>();
+		resolver.TargetRenderer = spriteRenderer;
+		resolver.ItemType = itemType;
+		resolver.ItemLabel = label;
+		resolver.PrimaryColor = bodyColor;
+		resolver.AccentColor = accentColor;
+		resolver.Decorative = decorative;
+
+		if (!string.IsNullOrEmpty(label))
+			CreateLabel(parent, label, Color.white, decorative);
+	}
+
+	Vector3 GetLocalScaleForDesiredWorldScale(Vector3 desiredWorldScale, Vector3 parentWorldScaleAbs)
+	{
+		const float eps = 0.00001f;
+		float px = Mathf.Abs(parentWorldScaleAbs.x) < eps ? 1f : parentWorldScaleAbs.x;
+		float py = Mathf.Abs(parentWorldScaleAbs.y) < eps ? 1f : parentWorldScaleAbs.y;
+		float pz = Mathf.Abs(parentWorldScaleAbs.z) < eps ? 1f : parentWorldScaleAbs.z;
+		return new Vector3(desiredWorldScale.x / px, desiredWorldScale.y / py, desiredWorldScale.z / pz);
+	}
+
+	Vector3 GetWorldScaleAbs(Transform t)
+	{
+		Vector3 scale = Vector3.one;
+		Transform current = t;
+		while (current != null)
+		{
+			Vector3 local = current.localScale;
+			scale = Vector3.Scale(scale, new Vector3(Mathf.Abs(local.x), Mathf.Abs(local.y), Mathf.Abs(local.z)));
+			current = current.parent;
+		}
+
+		return scale;
 	}
 
 	void AddAccent(Transform parent, Color accentColor, DynamicStreetItemType itemType)
@@ -406,19 +463,30 @@ public class Box_Loop : MonoBehaviour {
 		ConfigureRenderer(accent.GetComponent<Renderer>(), accentColor);
 	}
 
-	void CreateLabel(Transform parent, string label, Color color)
+	void CreateLabel(Transform anchor, string label, Color color, bool decorative)
 	{
 		GameObject labelGo = new GameObject("Label");
-		labelGo.transform.SetParent(parent, false);
-		labelGo.transform.localPosition = Vector3.up * 1.4f;
-
 		TextMesh textMesh = labelGo.AddComponent<TextMesh>();
+		Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+		if (font == null)
+			font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+		textMesh.font = font;
 		textMesh.text = label;
 		textMesh.fontSize = 40;
-		textMesh.characterSize = 0.08f;
+		textMesh.characterSize = 0.12f;
 		textMesh.anchor = TextAnchor.MiddleCenter;
 		textMesh.alignment = TextAlignment.Center;
 		textMesh.color = color;
+		MeshRenderer renderer = labelGo.GetComponent<MeshRenderer>();
+		if (renderer != null && font != null)
+		{
+			renderer.sharedMaterial = font.material;
+			renderer.sortingOrder = decorative ? 30 : 40;
+		}
+		var labelFollow = labelGo.AddComponent<DynamicStreetWorldLabel>();
+		labelFollow.Anchor = anchor;
+		labelFollow.WorldOffset = decorative ? new Vector3(0f, 1.8f, 0f) : new Vector3(0f, 1.25f, 0f);
+		labelFollow.UniformScale = decorative ? 0.03f : 0.026f;
 	}
 
 	Color GetBodyColor(CityRuntimeProfile profile, DynamicStreetItemType itemType)

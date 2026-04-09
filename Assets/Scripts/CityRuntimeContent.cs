@@ -246,6 +246,11 @@ public static class CityRuntimeContent
         return ResolveProfile(street).CityName;
     }
 
+    public static List<CityRuntimeProfile> GetAllProfiles()
+    {
+        return new List<CityRuntimeProfile>(Profiles);
+    }
+
     public static string PickLabel(CityRuntimeProfile profile, DynamicStreetItemType itemType)
     {
         switch (itemType)

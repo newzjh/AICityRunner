@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using NUnit.Framework;
 using UnityEngine;
 
 public class Global : MonoBehaviour
@@ -16,11 +17,14 @@ public class Global : MonoBehaviour
 
     public Texture2D[] bridges;
 
+    public AtlaCollection[] CityItemIcons;
+
     public AtlaCollection DefaultUser;
     public AtlaCollection CurrentUser;
     public float CurrentSpeed = 24;
 
-    public static bool runtimegeneration = false;
+    public static bool runtimegenerationBG = false;
+    public static bool runtimegenerationIcon = false;
 
     public static async UniTask BuildAISceneContent(string street)
     {
@@ -34,7 +38,9 @@ public class Global : MonoBehaviour
         CityRuntimeProfile cityProfile = CityRuntimeContent.ResolveProfile(street);
         Global global = GameObject.FindFirstObjectByType<Global>();
 
-        if (runtimegeneration)
+        await CityIconAtlasService.PreloadCityAtlasAsync(cityProfile, runtimegenerationIcon);
+
+        if (runtimegenerationBG)
         {
             string prompt = "生成" + street + "城市横板跑酷街景，水平侧视角，C4D风格，保留城市天际线和道路结构，包含地标、街边绿化与水岸层次，适合横向无限卷轴拼接，无明显接缝，整体色彩体现" + cityProfile.CityName + "气质。";
             var tex = await TextToImage2.SendStreamRequestCommon(prompt);

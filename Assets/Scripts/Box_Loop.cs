@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class Box_Loop : MonoBehaviour {
 	
@@ -61,7 +62,9 @@ public class Box_Loop : MonoBehaviour {
 		if (zonego == null)
 			return;
 
-		Global global = GameObject.FindFirstObjectByType<Global>();
+        bool dynamicRunway = SceneManager.GetActiveScene().name.Contains("PlayScene");
+
+        Global global = GameObject.FindFirstObjectByType<Global>();
 
 		var rbs = zonego.GetComponentsInChildren<Rigidbody>();
 		foreach (var rb in rbs)
@@ -113,7 +116,10 @@ public class Box_Loop : MonoBehaviour {
 			}
 		}
 
-		var boxs = zonego.GetComponentsInChildren<BoxCollider>();
+		bool IsStartZone = zonego.name.Contains("box_Loop_Coin");
+
+
+        var boxs = zonego.GetComponentsInChildren<BoxCollider>();
 		foreach(var box in boxs)
 		{
 			if (box == null)
@@ -141,14 +147,19 @@ public class Box_Loop : MonoBehaviour {
             if (Global.bridge)
                 mr.material.mainTexture = Global.bridge;
 
-			BuildFloorBricks(box, global);
+			if (dynamicRunway)
+			{
+                mr.enabled = false;
+                BuildFloorBricks(box, global, !IsStartZone);
+				box.enabled = false;
+			}
         }
 
-		if (!zonego.name.Contains("box_Loop_Coin"))
+		if (!IsStartZone)
 			BuildDynamicCityContent(zonego);
     }
 
-	void BuildFloorBricks(BoxCollider tileBox, Global global)
+	void BuildFloorBricks(BoxCollider tileBox, Global global, bool enableDynamicDifficulty)
 	{
 		if (tileBox == null)
 			return;
@@ -177,7 +188,7 @@ public class Box_Loop : MonoBehaviour {
 
 		Vector3 desiredWorldScale = new Vector3(brickLen, brickThickness, laneWidth);
 		Vector3 parentWorldScaleAbs = GetWorldScaleAbs(rootGo.transform);
-		Vector3 localScale = Vector3.one * 0.45f;// GetLocalScaleForDesiredWorldScale(desiredWorldScale, parentWorldScaleAbs);
+		Vector3 localScale = Vector3.one * 0.55f;// GetLocalScaleForDesiredWorldScale(desiredWorldScale, parentWorldScaleAbs);
 		localScale.z = 0.30f;
 
 		float zMin = bounds.min.z + laneWidth * 0.5f;
@@ -194,6 +205,7 @@ public class Box_Loop : MonoBehaviour {
 		bool useCurve = UnityEngine.Random.value < Mathf.Clamp01(CurveChance);
 		float curveSign = UnityEngine.Random.value < 0.5f ? 1f : -1f;
 		float curveAmp = UnityEngine.Random.Range(CurveAmplitudeRange.x, CurveAmplitudeRange.y) * curveSign;
+		curveAmp *= 2f;
 		int maxGaps = Mathf.Max(0, MaxConsecutiveGapsPerLane);
 		int[] gapStreak = new int[3];
 
@@ -211,7 +223,7 @@ public class Box_Loop : MonoBehaviour {
 			int presentCount = 0;
 			for (int lane = 0; lane < 3; lane++)
 			{
-				bool skip = UnityEngine.Random.value < Mathf.Clamp01(GapChance);
+				bool skip = enableDynamicDifficulty && (UnityEngine.Random.value < Mathf.Clamp01(GapChance));
 				if (skip && gapStreak[lane] >= maxGaps)
 					skip = false;
 				present[lane] = !skip;
@@ -241,19 +253,19 @@ public class Box_Loop : MonoBehaviour {
 				brick.transform.position = worldPos;
 				brick.transform.rotation = rot;
 				Vector3 brickScale = localScale;
-				if (UnityEngine.Random.value < Mathf.Clamp01(StaticScaleVariationChance))
+				if (enableDynamicDifficulty && (UnityEngine.Random.value < Mathf.Clamp01(StaticScaleVariationChance)))
 					brickScale.y *= UnityEngine.Random.Range(StaticScaleYMulRange.x, StaticScaleYMulRange.y);
 				brick.transform.localScale = brickScale;
 
 				Collider collider = brick.GetComponent<Collider>();
 				if (collider != null)
-					collider.enabled = false;
+					collider.enabled = true;
 
 				Renderer renderer = brick.GetComponent<Renderer>();
 				if (renderer != null && global != null && global.FloorMat != null)
 					renderer.sharedMaterial = global.FloorMat;
 
-				if (UnityEngine.Random.value < Mathf.Clamp01(MovingBrickChance))
+				if (enableDynamicDifficulty && (UnityEngine.Random.value < Mathf.Clamp01(MovingBrickChance)))
 				{
 					UpDown upDown = brick.AddComponent<UpDown>();
 					upDown.Speed = UnityEngine.Random.Range(MovingBrickSpeedRange.x, MovingBrickSpeedRange.y);

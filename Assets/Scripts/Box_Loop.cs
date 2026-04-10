@@ -10,6 +10,7 @@ public class Box_Loop : MonoBehaviour {
 	
 	public float Speed = 5f;
 	const string DynamicRootName = "__DynamicStreetContent";
+	const string FloorBricksRootName = "__FloorBricks";
 	const float LaneOffset = 5f;
 	const float SpawnXMin = 4.5f;
 	const float SpawnXMax = 24.5f;
@@ -129,11 +130,83 @@ public class Box_Loop : MonoBehaviour {
 
             if (Global.bridge)
                 mr.material.mainTexture = Global.bridge;
+
+			BuildFloorBricks(box, global);
         }
 
 		if (!zonego.name.Contains("box_Loop_Coin"))
 			BuildDynamicCityContent(zonego);
     }
+
+	void BuildFloorBricks(BoxCollider tileBox, Global global)
+	{
+		if (tileBox == null)
+			return;
+
+		Transform tileTransform = tileBox.transform;
+		Transform oldRoot = tileTransform.Find(FloorBricksRootName);
+		if (oldRoot != null)
+			DestroyRuntimeObject(oldRoot.gameObject);
+
+		GameObject rootGo = new GameObject(FloorBricksRootName);
+		rootGo.transform.SetParent(tileTransform, false);
+
+		Bounds bounds = tileBox.bounds;
+		float totalLen = bounds.size.x;
+		float totalWidth = bounds.size.z;
+
+		float brickLen = Mathf.Clamp(totalLen / 18f, 0.6f, 1.6f);
+		float brickThickness = Mathf.Clamp(bounds.size.y * 0.2f, 0.06f, 0.2f);
+		float laneWidth = Mathf.Clamp(totalWidth / 3f, 1.5f, 4.5f);
+
+		float startX = bounds.min.x + brickLen * 0.5f;
+		float endX = bounds.max.x - brickLen * 0.5f;
+		int brickCount = Mathf.Clamp(Mathf.FloorToInt((endX - startX) / brickLen) + 1, 0, 240);
+
+		float y = bounds.max.y - brickThickness * 0.5f - 0.01f;
+
+		Vector3 desiredWorldScale = new Vector3(brickLen, brickThickness, laneWidth);
+		Vector3 parentWorldScaleAbs = GetWorldScaleAbs(rootGo.transform);
+		Vector3 localScale = Vector3.one * 0.45f;// GetLocalScaleForDesiredWorldScale(desiredWorldScale, parentWorldScaleAbs);
+		localScale.z = 0.30f;
+
+		float zMin = bounds.min.z + laneWidth * 0.5f;
+		float zMax = bounds.max.z - laneWidth * 0.5f;
+		if (zMax < zMin)
+		{
+			zMin = bounds.center.z;
+			zMax = bounds.center.z;
+		}
+		zMin = 0;
+		zMax = -10;
+
+		for (int lane = 0; lane < 3; lane++)
+		{
+			float t = lane / 2f;
+			float z = Mathf.Lerp(zMax, zMin, t);
+
+			for (int i = 0; i < brickCount; i++)
+			{
+				float x = startX + i * brickLen;
+				Vector3 worldPos = new Vector3(x, y, z);
+
+				GameObject brick = GameObject.CreatePrimitive(PrimitiveType.Cube);
+				brick.name = "FloorBrick";
+				brick.transform.SetParent(rootGo.transform, true);
+				brick.transform.position = worldPos;
+				brick.transform.rotation = Quaternion.identity;
+				brick.transform.localScale = localScale;
+
+				Collider collider = brick.GetComponent<Collider>();
+				if (collider != null)
+					collider.enabled = false;
+
+				Renderer renderer = brick.GetComponent<Renderer>();
+				if (renderer != null && global != null && global.FloorMat != null)
+					renderer.sharedMaterial = global.FloorMat;
+			}
+		}
+	}
 
 	[NonSerialized]
 	public float detectdistance = 0.6f;

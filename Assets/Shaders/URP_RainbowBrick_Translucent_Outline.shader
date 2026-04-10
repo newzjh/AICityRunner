@@ -10,9 +10,11 @@ Shader "AICityRunner/URP/RainbowBrick Translucent Outline"
         _HueOffset("Hue Offset", Float) = 0
         _Saturation("Saturation", Range(0, 1)) = 0.9
         _Value("Value", Range(0, 2)) = 1.2
-        _ObjectGradientScale("Object Gradient Scale", Float) = 1
-        _ObjectGradientOffset("Object Gradient Offset", Float) = 0
+        _ObjectGradientScale("World X Hue Scale", Float) = 1
+        _ObjectGradientOffset("World X Hue Offset", Float) = 0
         _UseVertexColor("Use Vertex Color (RGB)", Range(0, 1)) = 0
+        _LaneOffset("Lane Offset (World Z)", Float) = 5
+        _LaneHueStep("Lane Hue Step", Range(0, 1)) = 0
 
         _Ambient("Ambient", Range(0, 2)) = 0.55
         _Diffuse("Diffuse", Range(0, 2)) = 1.0
@@ -42,8 +44,6 @@ Shader "AICityRunner/URP/RainbowBrick Translucent Outline"
             "RenderType" = "Transparent"
         }
 
-
-
         Pass
         {
             Name "Forward"
@@ -60,10 +60,12 @@ Shader "AICityRunner/URP/RainbowBrick Translucent Outline"
             #pragma target 2.0
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile_instancing
+            
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+
+            
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseColor;
@@ -77,6 +79,8 @@ Shader "AICityRunner/URP/RainbowBrick Translucent Outline"
                 float _ObjectGradientScale;
                 float _ObjectGradientOffset;
                 float _UseVertexColor;
+                float _LaneOffset;
+                float _LaneHueStep;
 
                 float _Ambient;
                 float _Diffuse;
@@ -91,6 +95,10 @@ Shader "AICityRunner/URP/RainbowBrick Translucent Outline"
                 float _StreakTiling;
                 float _StreakWidth;
                 float _StreakSpeed;
+
+                float4 _OutlineColor;
+                float _OutlineAlpha;
+                float _OutlineWidth;
             CBUFFER_END
 
             struct Attributes
@@ -111,6 +119,7 @@ Shader "AICityRunner/URP/RainbowBrick Translucent Outline"
                 float4 color : TEXCOORD3;
                 float4 screenPos : TEXCOORD4;
                 float3 positionOS : TEXCOORD5;
+                float3 normalOS : TEXCOORD6;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -134,6 +143,7 @@ Shader "AICityRunner/URP/RainbowBrick Translucent Outline"
                 output.uv = input.uv;
                 output.color = input.color;
                 output.screenPos = ComputeScreenPos(output.positionCS);
+                output.normalOS = input.normalOS;
                 return output;
             }
 
@@ -145,10 +155,12 @@ Shader "AICityRunner/URP/RainbowBrick Translucent Outline"
                 float3 V = SafeNormalize(GetWorldSpaceViewDir(input.positionWS));
 
                 float gradUv = input.uv.x;
-                float gradObj = input.positionOS.x * _ObjectGradientScale + _ObjectGradientOffset;
-                float grad = lerp(gradUv, gradObj, saturate(_GradientFromObjectX));
+                float gradWorld = input.positionWS.x * _ObjectGradientScale + _ObjectGradientOffset;
+                float grad = lerp(gradUv, gradWorld, saturate(_GradientFromObjectX));
 
-                float hue = frac(grad * _HueScale + _HueOffset);
+                float laneOffsetSafe = max(abs(_LaneOffset), 0.0001);
+                float laneIndex = round((-input.positionWS.z) / laneOffsetSafe);
+                float hue = frac(grad * _HueScale + _HueOffset + laneIndex * _LaneHueStep);
                 float3 baseRgb = RainbowBrickHsvToRgb(float3(hue, _Saturation, _Value));
                 baseRgb *= _BaseColor.rgb;
                 baseRgb *= lerp(1.0.xxx, input.color.rgb, saturate(_UseVertexColor));
@@ -177,67 +189,36 @@ Shader "AICityRunner/URP/RainbowBrick Translucent Outline"
 
                 float3 rgb = ambient + diffuse + specular + rimCol + streakCol;
                 float alpha = saturate(_Alpha * _BaseColor.a);
+                float sx = length(float3(unity_ObjectToWorld._m00, unity_ObjectToWorld._m10, unity_ObjectToWorld._m20));
+                float sy = length(float3(unity_ObjectToWorld._m01, unity_ObjectToWorld._m11, unity_ObjectToWorld._m21));
+                float sz = length(float3(unity_ObjectToWorld._m02, unity_ObjectToWorld._m12, unity_ObjectToWorld._m22));
+                float3 nOS = SafeNormalize(input.normalOS);
+                float3 an = abs(nOS);
+
+                float2 dAxis;
+                float2 wAxis;
+                if (an.y >= an.x && an.y >= an.z)
+                {
+                    dAxis = float2(0.5 - abs(input.positionOS.x), 0.5 - abs(input.positionOS.z));
+                    wAxis = float2(sx, sz);
+                }
+                else if (an.x >= an.y && an.x >= an.z)
+                {
+                    dAxis = float2(0.5 - abs(input.positionOS.y), 0.5 - abs(input.positionOS.z));
+                    wAxis = float2(sy, sz);
+                }
+                else
+                {
+                    dAxis = float2(0.5 - abs(input.positionOS.x), 0.5 - abs(input.positionOS.y));
+                    wAxis = float2(sx, sy);
+                }
+
+                float2 localW = _OutlineWidth / max(wAxis, 0.000001.xx);
+                float2 nd = dAxis / max(localW, 0.000001.xx);
+                float outlineMask = step(min(nd.x, nd.y), 1.0);
+                float outlineT = saturate(outlineMask * _OutlineAlpha * _OutlineColor.a);
+                rgb = lerp(rgb, _OutlineColor.rgb, outlineT);
                 return half4(rgb, alpha);
-            }
-            ENDHLSL
-        }
-
-         Pass
-        {
-            Name "Outline"
-            Tags
-            {
-                "LightMode" = "UniversalForward"
-            }
-
-            Blend SrcAlpha OneMinusSrcAlpha
-            ZWrite Off
-            Cull Front
-
-            HLSLPROGRAM
-            #pragma target 2.0
-            #pragma vertex vert
-            #pragma fragment frag
-            #pragma multi_compile_instancing
-
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-
-            CBUFFER_START(UnityPerMaterial)
-                float4 _OutlineColor;
-                float _OutlineAlpha;
-                float _OutlineWidth;
-            CBUFFER_END
-
-            struct Attributes
-            {
-                float4 positionOS : POSITION;
-                float3 normalOS : NORMAL;
-                UNITY_VERTEX_INPUT_INSTANCE_ID
-            };
-
-            struct Varyings
-            {
-                float4 positionCS : SV_POSITION;
-                UNITY_VERTEX_OUTPUT_STEREO
-            };
-
-            Varyings vert(Attributes input)
-            {
-                Varyings output;
-                UNITY_SETUP_INSTANCE_ID(input);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
-
-                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
-                float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
-                positionWS += normalize(normalWS) * _OutlineWidth;
-                output.positionCS = TransformWorldToHClip(positionWS);
-                return output;
-            }
-
-            half4 frag(Varyings input) : SV_Target
-            {
-                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-                return half4(_OutlineColor.rgb, _OutlineAlpha * _OutlineColor.a);
             }
             ENDHLSL
         }

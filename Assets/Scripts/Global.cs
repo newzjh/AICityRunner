@@ -49,19 +49,19 @@ public class Global : MonoBehaviour
 
             if (global != null && global.bridges != null && global.bridges.Length > 0)
             {
-                bridge = global.bridges[UnityEngine.Random.Range(0, global.bridges.Length - 1)];
+                bridge = global.bridges[UnityEngine.Random.Range(0, global.bridges.Length)];
             }
         }
         else if (global != null)
         {
             if (global.bgs != null && global.bgs.Length > 0)
             {
-                bg = global.bgs[UnityEngine.Random.Range(0, global.bgs.Length - 1)];
+                bg = global.bgs[UnityEngine.Random.Range(0, global.bgs.Length)];
             }
 
             if (global.bridges != null && global.bridges.Length > 0)
             {
-                bridge = global.bridges[UnityEngine.Random.Range(0, global.bridges.Length - 1)];
+                bridge = global.bridges[UnityEngine.Random.Range(0, global.bridges.Length)];
             }
         }
 

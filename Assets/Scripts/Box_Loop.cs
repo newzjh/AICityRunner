@@ -62,6 +62,21 @@ public class Box_Loop : MonoBehaviour {
 
             if (rb.gameObject.tag == "coin")
 			{
+				DynamicStreetRuntimeItem runtimeItem = rb.GetComponent<DynamicStreetRuntimeItem>();
+				if (runtimeItem == null)
+				{
+					runtimeItem = rb.gameObject.AddComponent<DynamicStreetRuntimeItem>();
+					runtimeItem.ItemType = DynamicStreetItemType.ScorePickup;
+					runtimeItem.CityName = Global.CurrentCity;
+					runtimeItem.ScoreValue = 1;
+				}
+
+                runtimeItem.BobAmplitude = UnityEngine.Random.Range(0.1f, 0.25f);
+                runtimeItem.BobFrequency = UnityEngine.Random.Range(1.0f, 3.0f);
+				runtimeItem.SpinSpeed = UnityEngine.Random.Range(0,100)>50? UnityEngine.Random.Range(45.0f, 125.0f) : UnityEngine.Random.Range(-45.0f, -125.0f);
+
+                runtimeItem.EnableBob = true;
+				runtimeItem.EnableSpin = true;
 
 				var mr = rb.GetComponentInChildren<MeshRenderer>();
 

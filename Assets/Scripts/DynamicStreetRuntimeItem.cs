@@ -47,7 +47,7 @@ public class DynamicStreetRuntimeItem : MonoBehaviour
 
         if (EnableSpin)
         {
-            transform.Rotate(Vector3.up, SpinSpeed * Time.deltaTime, Space.Self);
+            transform.Rotate(Vector3.forward, SpinSpeed * Time.deltaTime, Space.Self);
         }
     }
 

@@ -285,7 +285,7 @@ public class Box_Loop : MonoBehaviour {
 			return;
 
 		localPosition.y = 0.7f;
-		localPosition.z += UnityEngine.Random.value > 0.5f ? 1.7f : -1.7f;
+		//localPosition.z += UnityEngine.Random.value > 0.5f ? 1.7f : -1.7f;
 
 		PrimitiveType primitiveType = PrimitiveType.Cube;
 		Vector3 scale = new Vector3(1.4f, 0.8f, 0.6f);

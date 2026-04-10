@@ -16,6 +16,16 @@ public class Box_Loop : MonoBehaviour {
 	const float SpawnXMax = 24.5f;
 	const float MinLaneSpacing = 3f;
 
+	public float CurveChance = 0.35f;
+	public Vector2 CurveAmplitudeRange = new Vector2(0.35f, 1.05f);
+	public float GapChance = 0.12f;
+	public int MaxConsecutiveGapsPerLane = 2;
+	public float MovingBrickChance = 0.08f;
+	public Vector2 MovingBrickAmplitudeRange = new Vector2(0.15f, 0.45f);
+	public Vector2 MovingBrickSpeedRange = new Vector2(0.8f, 1.8f);
+	public float StaticScaleVariationChance = 0.15f;
+	public Vector2 StaticScaleYMulRange = new Vector2(0.85f, 1.25f);
+
 	Player_Move player = null;
 
     public void Start()
@@ -180,22 +190,60 @@ public class Box_Loop : MonoBehaviour {
 		zMin = 0;
 		zMax = -10;
 
-		for (int lane = 0; lane < 3; lane++)
-		{
-			float t = lane / 2f;
-			float z = Mathf.Lerp(zMax, zMin, t);
+		float lenX = Mathf.Max(bounds.size.x, 0.0001f);
+		bool useCurve = UnityEngine.Random.value < Mathf.Clamp01(CurveChance);
+		float curveSign = UnityEngine.Random.value < 0.5f ? 1f : -1f;
+		float curveAmp = UnityEngine.Random.Range(CurveAmplitudeRange.x, CurveAmplitudeRange.y) * curveSign;
+		int maxGaps = Mathf.Max(0, MaxConsecutiveGapsPerLane);
+		int[] gapStreak = new int[3];
 
-			for (int i = 0; i < brickCount; i++)
+		for (int i = 0; i < brickCount; i++)
+		{
+			float x = startX + i * brickLen;
+			float tx = Mathf.Clamp01((x - bounds.min.x) / lenX);
+			float curve01 = useCurve ? (0.5f - 0.5f * Mathf.Cos(tx * Mathf.PI * 2f)) : 0f;
+			float yOff = curveAmp * curve01;
+			float slope = useCurve ? (curveAmp * (Mathf.PI / lenX) * Mathf.Sin(tx * Mathf.PI * 2f)) : 0f;
+			float angleZ = Mathf.Atan(slope) * Mathf.Rad2Deg;
+			Quaternion rot = Quaternion.AngleAxis(angleZ, Vector3.forward);
+
+			bool[] present = new bool[3];
+			int presentCount = 0;
+			for (int lane = 0; lane < 3; lane++)
 			{
-				float x = startX + i * brickLen;
-				Vector3 worldPos = new Vector3(x, y, z);
+				bool skip = UnityEngine.Random.value < Mathf.Clamp01(GapChance);
+				if (skip && gapStreak[lane] >= maxGaps)
+					skip = false;
+				present[lane] = !skip;
+				if (present[lane])
+					presentCount++;
+			}
+
+			if (presentCount == 0)
+				present[UnityEngine.Random.Range(0, 3)] = true;
+
+			for (int lane = 0; lane < 3; lane++)
+			{
+				if (!present[lane])
+				{
+					gapStreak[lane]++;
+					continue;
+				}
+
+				gapStreak[lane] = 0;
+				float t = lane / 2f;
+				float z = Mathf.Lerp(zMax, zMin, t);
+				Vector3 worldPos = new Vector3(x, y + yOff, z);
 
 				GameObject brick = GameObject.CreatePrimitive(PrimitiveType.Cube);
 				brick.name = "FloorBrick";
 				brick.transform.SetParent(rootGo.transform, true);
 				brick.transform.position = worldPos;
-				brick.transform.rotation = Quaternion.identity;
-				brick.transform.localScale = localScale;
+				brick.transform.rotation = rot;
+				Vector3 brickScale = localScale;
+				if (UnityEngine.Random.value < Mathf.Clamp01(StaticScaleVariationChance))
+					brickScale.y *= UnityEngine.Random.Range(StaticScaleYMulRange.x, StaticScaleYMulRange.y);
+				brick.transform.localScale = brickScale;
 
 				Collider collider = brick.GetComponent<Collider>();
 				if (collider != null)
@@ -204,6 +252,14 @@ public class Box_Loop : MonoBehaviour {
 				Renderer renderer = brick.GetComponent<Renderer>();
 				if (renderer != null && global != null && global.FloorMat != null)
 					renderer.sharedMaterial = global.FloorMat;
+
+				if (UnityEngine.Random.value < Mathf.Clamp01(MovingBrickChance))
+				{
+					UpDown upDown = brick.AddComponent<UpDown>();
+					upDown.Speed = UnityEngine.Random.Range(MovingBrickSpeedRange.x, MovingBrickSpeedRange.y);
+					upDown.Up_Position = UnityEngine.Random.Range(MovingBrickAmplitudeRange.x, MovingBrickAmplitudeRange.y);
+					upDown.UpOrDown = UnityEngine.Random.value > 0.5f;
+				}
 			}
 		}
 	}

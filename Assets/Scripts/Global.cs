@@ -19,6 +19,8 @@ public class Global : MonoBehaviour
 
     public AtlaCollection[] CityItemIcons;
 
+    public Material FloorMat;
+
     public AtlaCollection DefaultUser;
     public AtlaCollection CurrentUser;
     public float CurrentSpeed = 24;
